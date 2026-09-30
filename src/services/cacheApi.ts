@@ -14,9 +14,19 @@ import {
 } from '../types/cache';
 
 // Base API URL configurable via environment variable VITE_API_BASE_URL
-// In AI Studio / local preview, defaults to /api (served by server.ts), or http://localhost:8080 when running against external Spring Boot
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL;
-export const API_BASE_URL = rawBaseUrl && rawBaseUrl.trim() !== '' ? rawBaseUrl.trim().replace(/\/+$/, '') : '/api';
+// If VITE_API_BASE_URL is invalid (e.g. random number/string) or unset, default to /api (served by server.ts)
+function resolveInitialBaseUrl(): string {
+  const raw = import.meta.env.VITE_API_BASE_URL;
+  if (!raw || typeof raw !== 'string') return '/api';
+  const trimmed = raw.trim();
+  // Must be an absolute http(s) URL or relative path starting with /
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://') && !trimmed.startsWith('/')) {
+    return '/api';
+  }
+  return trimmed.replace(/\/+$/, '');
+}
+
+export const API_BASE_URL = resolveInitialBaseUrl();
 
 class CacheApiService {
   private baseUrl: string;
@@ -41,21 +51,28 @@ class CacheApiService {
   }
 
   public async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const primaryUrl = `${this.baseUrl}${cleanEndpoint}`;
     const headers = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
       ...options.headers,
     };
 
-    const startTime = performance.now();
     try {
-      const response = await fetch(url, {
+      const response = await fetch(primaryUrl, {
         ...options,
         headers,
       });
 
       if (!response.ok) {
+        // If external 404/500 occurred and we're not on /api, try fallback to /api
+        if (this.baseUrl !== '/api') {
+          console.warn(`External cache backend at ${this.baseUrl} returned ${response.status}. Falling back to /api runtime.`);
+          this.baseUrl = '/api';
+          return this.request<T>(endpoint, options);
+        }
+
         let errorMsg = `HTTP Error ${response.status}: ${response.statusText}`;
         try {
           const errBody = await response.json();
@@ -72,8 +89,11 @@ class CacheApiService {
       const text = await response.text();
       return text ? JSON.parse(text) : ({} as T);
     } catch (err: any) {
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        throw new Error(`Unable to connect to cache backend at ${this.baseUrl}. Make sure the Spring Boot server is running on port 8080.`);
+      // If fetching external URL failed (e.g. Connection refused on 8080), seamlessly fallback to /api
+      if (this.baseUrl !== '/api') {
+        console.warn(`Could not reach external cache backend at ${this.baseUrl}. Falling back to internal Java-spec /api runtime.`);
+        this.baseUrl = '/api';
+        return this.request<T>(endpoint, options);
       }
       throw err;
     }
@@ -85,10 +105,15 @@ class CacheApiService {
   public async getStatus(): Promise<BackendStatus> {
     const startTime = performance.now();
     try {
-      // First try status endpoint, fallback to metrics
       await this.request<any>('/cache/metrics');
-      const latencyMs = Math.round(performance.now() - startTime);
-      return { online: true, latencyMs, url: this.baseUrl, version: 'Java 17 / Spring Boot 3' };
+      const latencyMs = Math.max(1, Math.round(performance.now() - startTime));
+      const isExternal = this.baseUrl.startsWith('http');
+      return {
+        online: true,
+        latencyMs,
+        url: this.baseUrl,
+        version: isExternal ? 'Java 17 / Spring Boot 3 (Port 8080)' : 'Java 17 Spec Runtime (/api)',
+      };
     } catch {
       return { online: false, url: this.baseUrl };
     }
