@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type PolicyType = 'LRU' | 'LFU';
+export type PolicyType = 'LRU' | 'LFU' | 'FIFO' | 'TWO_QUEUE' | 'ARC' | 'RANDOM';
 export type EvictionPolicyType = PolicyType;
 
 export interface CacheMetrics {

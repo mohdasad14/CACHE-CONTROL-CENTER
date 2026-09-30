@@ -294,9 +294,20 @@ public class CacheManager<K, V> {
     }
 
     private EvictionPolicy<K> createPolicyInstance(EvictionPolicyType type) {
+        if (type == null) {
+            return new LRUPolicy<>();
+        }
         switch (type) {
             case LFU:
                 return new LFUPolicy<>();
+            case FIFO:
+                return new FIFOPolicy<>();
+            case TWO_QUEUE:
+                return new TwoQueuePolicy<>();
+            case ARC:
+                return new ARCPolicy<>();
+            case RANDOM:
+                return new RandomPolicy<>();
             case LRU:
             default:
                 return new LRUPolicy<>();

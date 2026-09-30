@@ -114,12 +114,42 @@ function findEvictionCandidate(): string | null {
         candidateKey = k;
       }
     }
-  } else {
-    // LFU
+  } else if (cachePolicy === 'LFU') {
     let minFreq = Infinity;
     for (const [k, v] of cacheStorage.entries()) {
       if (v.accessCount < minFreq) {
         minFreq = v.accessCount;
+        candidateKey = k;
+      }
+    }
+  } else if (cachePolicy === 'FIFO') {
+    let oldestCreated = Infinity;
+    for (const [k, v] of cacheStorage.entries()) {
+      if (v.createdAt < oldestCreated) {
+        oldestCreated = v.createdAt;
+        candidateKey = k;
+      }
+    }
+  } else if (cachePolicy === 'TWO_QUEUE' || cachePolicy === 'ARC') {
+    // Priority: single-access items evicted first (probationary), then least recently accessed
+    let minAccess = Infinity;
+    let oldest = Infinity;
+    for (const [k, v] of cacheStorage.entries()) {
+      if (v.accessCount < minAccess || (v.accessCount === minAccess && v.lastAccessed < oldest)) {
+        minAccess = v.accessCount;
+        oldest = v.lastAccessed;
+        candidateKey = k;
+      }
+    }
+  } else if (cachePolicy === 'RANDOM') {
+    const keys = Array.from(cacheStorage.keys());
+    candidateKey = keys[Math.floor(Math.random() * keys.length)];
+  } else {
+    // Default fallback to LRU
+    let oldest = Infinity;
+    for (const [k, v] of cacheStorage.entries()) {
+      if (v.lastAccessed < oldest) {
+        oldest = v.lastAccessed;
         candidateKey = k;
       }
     }
@@ -357,8 +387,9 @@ app.post('/api/cache/capacity', (req, res) => {
 // 9. POST /api/cache/policy
 app.post('/api/cache/policy', (req, res) => {
   const { policy } = req.body;
-  if (policy !== 'LRU' && policy !== 'LFU') {
-    return res.status(400).json({ error: 'Policy must be LRU or LFU.' });
+  const validPolicies = ['LRU', 'LFU', 'FIFO', 'TWO_QUEUE', 'ARC', 'RANDOM'];
+  if (!validPolicies.includes(policy)) {
+    return res.status(400).json({ error: `Policy must be one of: ${validPolicies.join(', ')}` });
   }
   cachePolicy = policy;
   res.json({ success: true, policy: cachePolicy });

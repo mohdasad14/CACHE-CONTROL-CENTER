@@ -5,5 +5,9 @@ package com.cachex.model;
  */
 public enum EvictionPolicyType {
     LRU,
-    LFU
+    LFU,
+    FIFO,
+    TWO_QUEUE,
+    ARC,
+    RANDOM
 }
