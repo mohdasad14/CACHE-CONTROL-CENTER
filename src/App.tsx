@@ -43,7 +43,7 @@ function DashboardContent() {
   } = useCacheMetrics(1000);
 
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState<DashboardTab>('dashboard');
+  const [activeTab, setActiveTab] = useState<DashboardTab>('java-code');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(soundManager.getSoundEnabled());
   const [musicEnabled, setMusicEnabled] = useState<boolean>(soundManager.getMusicEnabled());
   const [showAiBox, setShowAiBox] = useState<boolean>(true);

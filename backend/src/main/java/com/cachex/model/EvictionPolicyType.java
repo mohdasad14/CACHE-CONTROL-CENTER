@@ -9,5 +9,8 @@ public enum EvictionPolicyType {
     FIFO,
     TWO_QUEUE,
     ARC,
-    RANDOM
+    RANDOM,
+    W_TINY_LFU,
+    SLRU,
+    CLOCK_PRO
 }

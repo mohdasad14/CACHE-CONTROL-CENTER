@@ -144,6 +144,21 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Lower Tier: Navigation Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto pb-2.5 pt-1 text-xs font-sans scrollbar-none border-t border-slate-900">
           <button
+            onClick={() => onTabChange('java-code')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap ${
+              activeTab === 'java-code'
+                ? 'bg-purple-500/20 text-purple-200 border border-purple-500/50 shadow-sm shadow-purple-950/50'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'
+            }`}
+          >
+            <FileCode2 className="w-3.5 h-3.5 text-purple-400" />
+            <span className="font-semibold">Java Engineering Studio (80% Coverage)</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-800 font-mono">
+              Java 17+
+            </span>
+          </button>
+
+          <button
             onClick={() => onTabChange('dashboard')}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap ${
               activeTab === 'dashboard'
@@ -152,22 +167,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <Activity className="w-3.5 h-3.5" />
-            <span>Live Metrics Dashboard</span>
-          </button>
-
-          <button
-            onClick={() => onTabChange('java-code')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap ${
-              activeTab === 'java-code'
-                ? 'bg-purple-500/15 text-purple-300 border border-purple-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'
-            }`}
-          >
-            <FileCode2 className="w-3.5 h-3.5 text-purple-400" />
-            <span>Java Source Code &amp; Project</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-800 font-mono">
-              Java 17
-            </span>
+            <span>Live Telemetry Dashboard</span>
           </button>
 
           <button

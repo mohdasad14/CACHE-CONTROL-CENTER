@@ -308,6 +308,12 @@ public class CacheManager<K, V> {
                 return new ARCPolicy<>();
             case RANDOM:
                 return new RandomPolicy<>();
+            case W_TINY_LFU:
+                return new WTinyLFUPolicy<>(capacity);
+            case SLRU:
+                return new SegmentedLRUPolicy<>(capacity);
+            case CLOCK_PRO:
+                return new ClockProPolicy<>(capacity);
             case LRU:
             default:
                 return new LRUPolicy<>();
