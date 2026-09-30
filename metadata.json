@@ -1,0 +1,6 @@
+{
+  "name": "CacheX — Intelligent Concurrent Cache & Performance Lab",
+  "description": "High-performance in-memory concurrent cache engine with pluggable LRU & LFU eviction policies, independent per-entry TTL, thread safety simulation, and real-time telemetry dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
